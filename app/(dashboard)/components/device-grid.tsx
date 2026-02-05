@@ -15,8 +15,14 @@ export function DeviceGrid({ initialDevices }: { initialDevices: Device[] }) {
     useEffect(() => {
         setItems((prevItems) =>
             prevItems.map((dev) => {
-                const relevantKey = Object.keys(payloads).find(k => k.includes(dev.id) && k.includes("status"));
-                if (relevantKey) return { ...dev, value: payloads[relevantKey] };
+                // Strict Topic Matching: home/{roomId}/{id}/status
+                // If roomId is null/missing, default to 'living' (or handle logic accordingly)
+                const room = dev.roomId || "living";
+                const topic = `home/${room}/${dev.id}/status`;
+
+                if (payloads[topic]) {
+                    return { ...dev, value: payloads[topic] };
+                }
                 return dev;
             })
         );
@@ -80,7 +86,6 @@ function getIcon(type: string) {
     switch (type) {
         case 'FAN': return Fan;
         case 'LIGHT': return Lightbulb;
-        case 'RELAY': return Zap;
         default: return Power;
     }
 }

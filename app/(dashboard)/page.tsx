@@ -17,6 +17,12 @@ export default async function DashboardPage() {
     const allDevices = await deviceUseCase.getAllDevices();
     const currentYear = new Date().getFullYear();
 
+    // Dynamic Greeting Logic
+    const hour = new Date().getHours();
+    let greeting = "Chào buổi sáng";
+    if (hour >= 12 && hour < 18) greeting = "Chào buổi chiều";
+    else if (hour >= 18 || hour < 5) greeting = "Chào buổi tối";
+
     return (
         <main className="min-h-screen pb-12">
             <Header username={session.username as string} />
@@ -27,7 +33,7 @@ export default async function DashboardPage() {
                 <div className="glass-card p-8 rounded-[2.5rem] flex flex-col md:flex-row justify-between items-center gap-6">
                     <div>
                         <h1 className="text-4xl font-black tracking-tighter text-neutral-900">
-                            Chào buổi sáng, {session.username as string}
+                            {greeting}, {session.username as string}
                         </h1>
                         <p className="text-neutral-500 font-medium mt-2">Hệ thống đang hoạt động ổn định.</p>
                     </div>

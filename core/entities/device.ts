@@ -1,4 +1,4 @@
-export type DeviceType = 'LIGHT' | 'FAN' | 'SENSOR' | 'CAMERA' | 'RELAY';
+export type DeviceType = 'LIGHT' | 'FAN' | 'SENSOR' | 'CAMERA';
 
 export interface Device {
     id: string;

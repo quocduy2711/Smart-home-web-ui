@@ -82,13 +82,11 @@ function startSimulator() {
     function publishStatus(dev: any) {
         // Topic: home/{room}/{id}/status
         const topic = `home/${dev.roomId}/${dev.id}/status`;
-        client.publish(topic, dev.value);
+        client.publish(topic, dev.value, { retain: true });
         console.log(`📤 Published Update: ${topic} -> ${dev.value}`);
     }
 
     // Handle errors
-    client.on("error", (err) => {
-        console.error("❌ MQTT Error:", err);
-    });
+});
 }
-
+}
