@@ -1,4 +1,3 @@
-
 'use server'
 
 import { db } from "@/infra/db";
@@ -12,54 +11,44 @@ import { nanoid } from "nanoid";
 
 const SECRET_KEY = new TextEncoder().encode(process.env.JWT_SECRET || "secret-key-graduation-project");
 
-export async function registerAction(prevState: any, formData: FormData) {
+type ActionState = {
+    error?: string;
+    success?: boolean;
+};
+
+// type ActionState definition removed (already defined above)
+
+import { authUseCase } from "@/core/use-cases/auth";
+
+export async function registerAction(prevState: ActionState | null, formData: FormData): Promise<ActionState> {
     const username = formData.get("username") as string;
     const password = formData.get("password") as string;
 
     if (!username || !password) return { error: "Vui lòng nhập đầy đủ thông tin" };
 
-    // Check exist
-    const existing = await db.query.users.findFirst({
-        where: eq(users.username, username)
-    });
-
-    if (existing) return { error: "Tên đăng nhập đã tồn tại" };
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
-    await db.insert(users).values({
-        id: nanoid(),
-        username,
-        password: hashedPassword,
-        createdAt: Date.now()
-    });
+    const result = await authUseCase.register(username, password);
+    if (!result.success) {
+        return { error: result.error };
+    }
 
     return { success: true };
 }
 
-export async function loginAction(prevState: any, formData: FormData) {
+export async function loginAction(prevState: ActionState | null, formData: FormData): Promise<ActionState> {
     const username = formData.get("username") as string;
     const password = formData.get("password") as string;
 
-    const user = await db.query.users.findFirst({
-        where: eq(users.username, username)
-    });
-
-    if (!user || !await bcrypt.compare(password, user.password)) {
-        return { error: "Sai tên đăng nhập hoặc mật khẩu" };
+    const result = await authUseCase.login(username, password);
+    if (result.error) {
+        return { error: result.error };
     }
 
-    // Create Session
-    const token = await new SignJWT({ id: user.id, username: user.username })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setExpirationTime('24h')
-        .sign(SECRET_KEY);
+    if (result.token) {
+        (await cookies()).set("session", result.token, { httpOnly: true, secure: process.env.NODE_ENV === "production" });
+        redirect("/");
+    }
 
-    (await cookies()).set("session", token, { httpOnly: true, secure: process.env.NODE_ENV === "production" });
-
-    redirect("/");
+    return { error: "Lỗi không xác định" };
 }
 
 export async function logoutAction() {

@@ -1,60 +1,62 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #111111;
+  --background: #f1f5f9;
+  --foreground: #0f172a;
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.5);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ffffff;
-  }
 }
 
 body {
   background: var(--background);
+  /* Hiệu ứng nền mờ ảo cho Dashboard */
+  background-image:
+    radial-gradient(at 0% 0%, hsla(253, 16%, 15%, 1) 0, transparent 40%),
+    radial-gradient(at 100% 100%, hsla(225, 39%, 30%, 1) 0, transparent 40%);
+  background-attachment: fixed;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
 }
 
-/* Ép màu chữ đen đậm cho tất cả input để không bị lỗi trắng trên trắng */
-input,
-select,
-textarea {
-  color: #111111 !important;
-  background-color: #ffffff !important;
-  border: 1px solid #d1d5db !important;
+/* Class cho thẻ kính mờ */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 40px 0 rgba(31, 38, 135, 0.1);
 }
 
-input::placeholder {
-  color: #6b7280 !important;
-}
+/* Animation Quạt xoay mượt */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
 
-/* Chế độ tối cho input */
-@media (prefers-color-scheme: dark) {
-
-  input,
-  select,
-  textarea {
-    color: #ffffff !important;
-    background-color: #1f2937 !important;
-    border-color: #374151 !important;
+  to {
+    transform: rotate(360deg);
   }
 }
 
-/* Làm đậm các màu chữ trung tính bị nhạt */
-.text-neutral-500 {
-  color: #4b5563 !important;
+.animate-spin-slow {
+  animation: spin-slow 1.5s linear infinite;
 }
 
-.text-neutral-400 {
-  color: #6b7280 !important;
+/* Đèn LED ảo cho trạng thái Active */
+.glow-on {
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Input style đồng bộ */
+input {
+  color: #111111 !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 12px !important;
+  padding: 10px 16px !important;
 }
