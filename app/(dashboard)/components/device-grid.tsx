@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Device } from "@/core/entities/device"; // Updated import
+import { Device } from "@/types";
 import { Power, Fan, Lightbulb, Zap } from "lucide-react";
 import clsx from "clsx";
 import { useMqtt } from "@/app/hooks/use-mqtt";

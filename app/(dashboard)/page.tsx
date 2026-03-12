@@ -1,4 +1,3 @@
-import { deviceUseCase } from "@/core/use-cases/devices";
 import { getSession } from "@/app/actions";
 import { redirect } from "next/navigation";
 import { DeviceGrid } from "./components/device-grid";
@@ -9,12 +8,31 @@ import { WeatherComparison } from "./components/weather-comparison";
 import { MqttStatusBadge } from "./components/mqtt-status-badge";
 import { Thermometer, Droplets, Activity } from "lucide-react";
 import { getWeatherData } from "@/app/actions-weather";
+import { Device } from "@/types";
+
+// Mock Devices
+const mockDevices: Device[] = [
+    // Sensors
+    { id: "temp1", name: "Nhiệt độ (DHT11)", type: "SENSOR", roomId: "living", value: "32.5", unit: "°C" },
+    { id: "hum1", name: "Độ ẩm (DHT11)", type: "SENSOR", roomId: "living", value: "60", unit: "%" },
+    { id: "light_sensor", name: "Ánh sáng", type: "SENSOR", roomId: "living", value: "120", unit: "Lux" },
+    { id: "pir1", name: "Chuyển động (PIR)", type: "SENSOR", roomId: "living", value: "No", unit: "" },
+    { id: "status", name: "Trạng thái hệ thống", type: "SENSOR", roomId: "system", value: "Hoạt động tốt", unit: "" },
+    
+    // Actuators (Lights & Fans)
+    { id: "light1", name: "Đèn 1", type: "LIGHT", roomId: "living", value: "OFF", unit: null },
+    { id: "light2", name: "Đèn 2", type: "LIGHT", roomId: "living", value: "OFF", unit: null },
+    { id: "light3", name: "Đèn 3", type: "LIGHT", roomId: "living", value: "OFF", unit: null },
+    { id: "fan1", name: "Quạt Nhỏ 1 (3V)", type: "FAN", roomId: "living", value: "OFF", unit: null },
+    { id: "fan2", name: "Quạt Nhỏ 2 (3V)", type: "FAN", roomId: "living", value: "OFF", unit: null },
+    { id: "fan3", name: "Quạt Lớn (12V)", type: "FAN", roomId: "living", value: "OFF", unit: null },
+];
 
 export default async function DashboardPage() {
     const session = await getSession();
     if (!session) redirect("/login");
 
-    const allDevices = await deviceUseCase.getAllDevices();
+    const allDevices = mockDevices;
     const weatherData = await getWeatherData();
 
     // DHT11 Fallback logic
@@ -22,29 +40,13 @@ export default async function DashboardPage() {
     const dht11TempStr = dht11TempDevice?.value;
     const indoorTemp = (dht11TempStr === null || dht11TempStr === undefined || dht11TempStr === "0") ? 0 : parseFloat(dht11TempStr);
 
-    // Simple history recording (saves every time the page is loaded for this demo)
-    if (indoorTemp > 0 && dht11TempDevice) {
-        await deviceUseCase.recordHistory(dht11TempDevice.id, indoorTemp.toString());
-    }
-
-    // Fetch history from DB (last 5 entries)
-    const history = dht11TempDevice ? await deviceUseCase.getDeviceHistory(dht11TempDevice.id, 5) : [];
-
-    // Map history to chart data (limited to 5 points)
-    const chartData = history.reverse().map((h, i) => ({
-        time: new Date(h.timestamp * 1000).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-        indoor: parseFloat(h.value),
-        outdoor: weatherData.current + (i - 2) // Simple mock for outdoor historical variation
+    // Map history to chart data (simulated for mock)
+    const baseHour = new Date().getHours() - 4;
+    const chartData = Array.from({ length: 5 }).map((_, i) => ({
+        time: `${Object.is(NaN, baseHour + i) ? "00" : (baseHour + i).toString().padStart(2, '0')}:00`,
+        indoor: indoorTemp - (4 - i) * 0.5,
+        outdoor: weatherData.current + (i - 2)
     }));
-
-    // Fill with placeholders if less than 5 points
-    while (chartData.length < 5) {
-        chartData.unshift({
-            time: "--:--",
-            indoor: 0,
-            outdoor: weatherData.current
-        });
-    }
 
     // Always ensure the last point is "Bây giờ"
     if (chartData.length > 0) {
@@ -64,7 +66,7 @@ export default async function DashboardPage() {
 
     return (
         <main className="min-h-screen pb-12">
-            <Header username={session.username as string} />
+            <Header username={(session as any).username as string} />
 
             <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-10">
 
@@ -72,7 +74,7 @@ export default async function DashboardPage() {
                 <div className="glass-card p-8 rounded-[2.5rem] flex flex-col md:flex-row justify-between items-center gap-6">
                     <div>
                         <h1 className="text-4xl font-black tracking-tighter text-neutral-900">
-                            {greeting}, {session.username as string}
+                            {greeting}, {(session as any).username as string}
                         </h1>
                         <p className="text-neutral-500 font-medium mt-2">Hệ thống đang hoạt động ổn định.</p>
                     </div>
@@ -102,7 +104,7 @@ export default async function DashboardPage() {
                         </div>
                     </section>
 
-                    {/* Hàng 2: Chỉ số Môi trường (Moved from sidebar) */}
+                    {/* Hàng 2: Chỉ số Môi trường */}
                     <section>
                         <h2 className="text-xs font-black uppercase tracking-[0.2em] text-neutral-400 mb-4">Chỉ số Môi trường</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -139,4 +141,4 @@ export default async function DashboardPage() {
             </div>
         </main>
     );
-}
+}

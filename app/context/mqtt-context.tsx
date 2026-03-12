@@ -1,14 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
-import mqtt from "mqtt";
-
-const BROKER_URL = process.env.NEXT_PUBLIC_MQTT_BROKER_URL || "ws://localhost:9001";
-// Default to localhost so it fails (Not Connected) if user hasn't run a broker.
-// Previous: "ws://test.mosquitto.org:8080" (Public Test Broker)
+import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 
 type MqttContextType = {
-    client: mqtt.MqttClient | null;
+    client: any | null; // Removed actual mqtt.MqttClient dependency
     isConnected: boolean;
     payloads: Record<string, string>;
     publish: (topic: string, message: string) => void;
@@ -17,66 +12,14 @@ type MqttContextType = {
 const MqttContext = createContext<MqttContextType | null>(null);
 
 export function MqttProvider({ children }: { children: ReactNode }) {
-    const [client, setClient] = useState<mqtt.MqttClient | null>(null);
-    const [isConnected, setIsConnected] = useState(false);
-    const [payloads, setPayloads] = useState<Record<string, string>>({});
-
-    useEffect(() => {
-        console.log("Connecting to MQTT Broker...", BROKER_URL);
-        const mqttClient = mqtt.connect(BROKER_URL, {
-            clean: true,
-            connectTimeout: 4000,
-            clientId: `nexus_web_${Math.random().toString(16).substr(2, 8)}`,
-        });
-
-        mqttClient.on("connect", () => {
-            console.log("MQTT Connected");
-            setIsConnected(true);
-            // Subscribe to all home device statuses
-            mqttClient.subscribe("home/+/+/status");
-        });
-
-        mqttClient.on("message", (topic, message) => {
-            const payload = message.toString();
-            // console.log(`Msg: ${topic} -> ${payload}`);
-            setPayloads((prev) => ({ ...prev, [topic]: payload }));
-        });
-
-        mqttClient.on("close", () => {
-            // console.log("MQTT Disconnected");
-            setIsConnected(false);
-        });
-
-        mqttClient.on("offline", () => {
-            // console.log("MQTT Offline");
-            setIsConnected(false);
-        });
-
-        mqttClient.on("error", (err) => {
-            console.error("MQTT Error: ", err);
-            mqttClient.end();
-        });
-
-        setClient(mqttClient);
-
-        return () => {
-            if (mqttClient.connected) {
-                mqttClient.end();
-            }
-        };
-    }, []);
+    // Mock state for frontend-only
+    const [client] = useState<any | null>(null);
+    const [isConnected] = useState(false);
+    const [payloads] = useState<Record<string, string>>({});
 
     const publish = useCallback((topic: string, message: string) => {
-        if (client && client.connected) {
-            client.publish(topic, message, (err) => {
-                if (err) {
-                    console.error("Publish error:", err);
-                }
-            });
-        } else {
-            console.warn("MQTT Client not connected. Cannot publish:", topic, message);
-        }
-    }, [client]);
+        console.warn("Mock MQTT Context: publish called, but no actual broker registered.", topic, message);
+    }, []);
 
     return (
         <MqttContext.Provider value={{ client, isConnected, payloads, publish }}>
